@@ -1,0 +1,112 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Agent	dqn/agent.py	/^class Agent(BaseModel):$/;"	c
+AgentConfig	config.py	/^class AgentConfig(object):$/;"	c
+BaseModel	dqn/base.py	/^class BaseModel(object):$/;"	c
+DQNConfig	config.py	/^class DQNConfig(AgentConfig, EnvironmentConfig):$/;"	c
+Environment	dqn/environment.py	/^class Environment(object):$/;"	c
+EnvironmentConfig	config.py	/^class EnvironmentConfig(object):$/;"	c
+FLAGS	main.py	/^FLAGS = flags.FLAGS$/;"	v
+GymEnvironment	dqn/environment.py	/^class GymEnvironment(Environment):$/;"	c
+History	dqn/history.py	/^class History:$/;"	c
+M1	config.py	/^class M1(DQNConfig):$/;"	c
+ReplayMemory	dqn/replay_memory.py	/^class ReplayMemory:$/;"	c
+SimpleGymEnvironment	dqn/environment.py	/^class SimpleGymEnvironment(Environment):$/;"	c
+__init__	dqn/agent.py	/^  def __init__(self, config, environment, sess):$/;"	m	class:Agent
+__init__	dqn/base.py	/^  def __init__(self, config):$/;"	m	class:BaseModel
+__init__	dqn/environment.py	/^  def __init__(self, config):$/;"	m	class:Environment
+__init__	dqn/environment.py	/^  def __init__(self, config):$/;"	m	class:GymEnvironment
+__init__	dqn/environment.py	/^  def __init__(self, config):$/;"	m	class:SimpleGymEnvironment
+__init__	dqn/history.py	/^  def __init__(self, config):$/;"	m	class:History
+__init__	dqn/replay_memory.py	/^  def __init__(self, config, model_dir):$/;"	m	class:ReplayMemory
+_random_step	dqn/environment.py	/^  def _random_step(self):$/;"	m	class:Environment
+_save_step	config.py	/^  _save_step = _test_step * 10$/;"	v	class:AgentConfig
+_step	dqn/environment.py	/^  def _step(self, action):$/;"	m	class:Environment
+_test_step	config.py	/^  _test_step = 5 * scale$/;"	v	class:AgentConfig
+act	dqn/environment.py	/^  def act(self, action, is_training=True):$/;"	m	class:GymEnvironment
+act	dqn/environment.py	/^  def act(self, action, is_training=True):$/;"	m	class:SimpleGymEnvironment
+action_repeat	config.py	/^  action_repeat = 1$/;"	v	class:M1
+action_size	dqn/environment.py	/^  def action_size(self):$/;"	m	class:Environment
+add	dqn/history.py	/^  def add(self, screen):$/;"	m	class:History
+add	dqn/replay_memory.py	/^  def add(self, screen, reward, action, terminal):$/;"	m	class:ReplayMemory
+after_act	dqn/environment.py	/^  def after_act(self, action):$/;"	m	class:Environment
+backend	config.py	/^  backend = 'tf'$/;"	v	class:M1
+batch_size	config.py	/^  batch_size = 32$/;"	v	class:AgentConfig
+build_dqn	dqn/agent.py	/^  def build_dqn(self):$/;"	m	class:Agent
+calc_gpu_fraction	main.py	/^def calc_gpu_fraction(fraction_string):$/;"	f
+checkpoint_dir	dqn/base.py	/^  def checkpoint_dir(self):$/;"	m	class:BaseModel
+class_vars	dqn/base.py	/^def class_vars(obj):$/;"	f
+clipped_error	dqn/ops.py	/^def clipped_error(x):$/;"	f
+cnn_format	config.py	/^  cnn_format = 'NCHW'$/;"	v	class:AgentConfig
+conv2d	dqn/ops.py	/^def conv2d(x,$/;"	f
+discount	config.py	/^  discount = 0.99$/;"	v	class:AgentConfig
+display	config.py	/^  display = False$/;"	v	class:AgentConfig
+double_q	config.py	/^  double_q = False$/;"	v	class:AgentConfig
+dueling	config.py	/^  dueling = False$/;"	v	class:AgentConfig
+env_name	config.py	/^  env_name = 'Breakout-v0'$/;"	v	class:EnvironmentConfig
+env_type	config.py	/^  env_type = 'detail'$/;"	v	class:M1
+ep_end	config.py	/^  ep_end = 0.1$/;"	v	class:AgentConfig
+ep_end_t	config.py	/^  ep_end_t = memory_size$/;"	v	class:AgentConfig
+ep_start	config.py	/^  ep_start = 1.$/;"	v	class:AgentConfig
+flags	main.py	/^flags = tf.app.flags$/;"	v
+get	dqn/history.py	/^  def get(self):$/;"	m	class:History
+getState	dqn/replay_memory.py	/^  def getState(self, index):$/;"	m	class:ReplayMemory
+get_config	config.py	/^def get_config(FLAGS):$/;"	f
+get_time	dqn/utils.py	/^def get_time():$/;"	f
+history_length	config.py	/^  history_length = 4$/;"	v	class:AgentConfig
+imresize	dqn/utils.py	/^  imresize = cv2.resize$/;"	v
+inject_summary	dqn/agent.py	/^  def inject_summary(self, tag_dict, step):$/;"	m	class:Agent
+learn_start	config.py	/^  learn_start = 5. * scale$/;"	v	class:AgentConfig
+learning_rate	config.py	/^  learning_rate = 0.00025$/;"	v	class:AgentConfig
+learning_rate_decay	config.py	/^  learning_rate_decay = 0.96$/;"	v	class:AgentConfig
+learning_rate_decay_step	config.py	/^  learning_rate_decay_step = 5 * scale$/;"	v	class:AgentConfig
+learning_rate_minimum	config.py	/^  learning_rate_minimum = 0.00025$/;"	v	class:AgentConfig
+linear	dqn/ops.py	/^def linear(input_, output_size, stddev=0.02, bias_start=0.0, activation_fn=None, name='linear'):$/;"	f
+lives	dqn/environment.py	/^  def lives(self):$/;"	m	class:Environment
+load	dqn/replay_memory.py	/^  def load(self):$/;"	m	class:ReplayMemory
+load_model	dqn/base.py	/^  def load_model(self):$/;"	m	class:BaseModel
+load_npy	dqn/utils.py	/^def load_npy(path):$/;"	f
+load_pkl	dqn/utils.py	/^def load_pkl(path):$/;"	f
+load_weight_from_pkl	dqn/agent.py	/^  def load_weight_from_pkl(self, cpu_mode=False):$/;"	m	class:Agent
+main	main.py	/^def main(_):$/;"	f
+max_delta	config.py	/^  max_delta = 1$/;"	v	class:AgentConfig
+max_reward	config.py	/^  max_reward = 1.$/;"	v	class:EnvironmentConfig
+max_step	config.py	/^  max_step = 5000 * scale$/;"	v	class:AgentConfig
+memory_size	config.py	/^  memory_size = 100 * scale$/;"	v	class:AgentConfig
+min_delta	config.py	/^  min_delta = -1$/;"	v	class:AgentConfig
+min_reward	config.py	/^  min_reward = -1.$/;"	v	class:EnvironmentConfig
+model	config.py	/^  model = ''$/;"	v	class:DQNConfig
+model_dir	dqn/base.py	/^  def model_dir(self):$/;"	m	class:BaseModel
+new_game	dqn/environment.py	/^  def new_game(self, from_random_game=False):$/;"	m	class:Environment
+new_random_game	dqn/environment.py	/^  def new_random_game(self):$/;"	m	class:Environment
+observe	dqn/agent.py	/^  def observe(self, screen, reward, action, terminal):$/;"	m	class:Agent
+play	dqn/agent.py	/^  def play(self, n_step=10000, n_episode=100, test_ep=None, render=False):$/;"	m	class:Agent
+pp	dqn/base.py	/^pp = pprint.PrettyPrinter().pprint$/;"	v
+predict	dqn/agent.py	/^  def predict(self, s_t, test_ep=None):$/;"	m	class:Agent
+q_learning_mini_batch	dqn/agent.py	/^  def q_learning_mini_batch(self):$/;"	m	class:Agent
+random_start	config.py	/^  random_start = 30$/;"	v	class:AgentConfig
+render	dqn/environment.py	/^  def render(self):$/;"	m	class:Environment
+reset	dqn/history.py	/^  def reset(self):$/;"	m	class:History
+rgb2gray	dqn/utils.py	/^def rgb2gray(image):$/;"	f
+sample	dqn/replay_memory.py	/^  def sample(self):$/;"	m	class:ReplayMemory
+save	dqn/replay_memory.py	/^  def save(self):$/;"	m	class:ReplayMemory
+save_model	dqn/base.py	/^  def save_model(self, step=None):$/;"	m	class:BaseModel
+save_npy	dqn/utils.py	/^def save_npy(obj, path):$/;"	f
+save_pkl	dqn/utils.py	/^def save_pkl(obj, path):$/;"	f
+save_weight_to_pkl	dqn/agent.py	/^  def save_weight_to_pkl(self):$/;"	m	class:Agent
+saver	dqn/base.py	/^  def saver(self):$/;"	m	class:BaseModel
+scale	config.py	/^  scale = 10000$/;"	v	class:AgentConfig
+screen	dqn/environment.py	/^  def screen(self):$/;"	m	class:Environment
+screen_height	config.py	/^  screen_height = 84$/;"	v	class:EnvironmentConfig
+screen_width	config.py	/^  screen_width  = 84$/;"	v	class:EnvironmentConfig
+state	dqn/environment.py	/^  def state(self):$/;"	m	class:Environment
+target_q_update_step	config.py	/^  target_q_update_step = 1 * scale$/;"	v	class:AgentConfig
+timed	dqn/utils.py	/^  def timed(*args, **kwargs):$/;"	f	function:timeit
+timeit	dqn/utils.py	/^def timeit(f):$/;"	f
+train	dqn/agent.py	/^  def train(self):$/;"	m	class:Agent
+train_frequency	config.py	/^  train_frequency = 4$/;"	v	class:AgentConfig
+update_target_q_network	dqn/agent.py	/^  def update_target_q_network(self):$/;"	m	class:Agent
