@@ -59,11 +59,11 @@ class Agent(BaseModel):
         ep_rewards, actions = [], []
 
       # 1. predict
-      action = self.predict(self.history.get())
+      (features,action) = self.predict(self.history.get())
       # 2. act
       screen, reward, terminal = self.env.act(action, is_training=True)
       # 3. observe
-      self.observe(screen, reward, action, terminal)
+      self.observe(screen, reward, features, terminal)
 
       if terminal:
         screen, reward, action, terminal = self.env.new_random_game()
@@ -123,7 +123,8 @@ class Agent(BaseModel):
           actions = []
 
   # dimension of s_t: 84*84*4, scaled screenshots with 4 most recent ones
-  def choose_action(self, s_t):
+  # return: features, selected_action
+  def choose_action(self, q):
     # q_val = self.sess.run(self.q, {self.s_t: [s_t]}) 
 	# dimension of q: 1*6, Q value for each item in action.space
 	# Assumed each one represents Q(s,f), so now the dimension of q should be 1*5
@@ -132,9 +133,11 @@ class Agent(BaseModel):
 	# feature 3: height(y) of the ball
 	# feature 4: x-axis distance(x) of the ball
 	# feature 5: position of the paddle
-    q = self.q.eval({self.s_t: [s_t]})
+    #q = self.sess.run(self.q,{self.s_t:[s_t]})
+    #q = self.q.eval({self.s_t: [s_t]})
 
     # by default the paddle stay hold
+    # action: 2--right, 3--left
     action = 1
     # only when the ball is going down, i.e., the angle of velocity is over 180, then predict the potential landing spot
     if q[1] > 180:
@@ -156,26 +159,29 @@ class Agent(BaseModel):
     return action
 	
   # choose action by epsilon greedy policy
+  # choose action based on rule
   def predict(self, s_t, test_ep=None):
     # discounted epsilon, initially 0.1 set from config file
     ep = test_ep or (self.ep_end +
         max(0., (self.ep_start - self.ep_end)
           * (self.ep_end_t - max(0., self.step - self.learn_start)) / self.ep_end_t))
 
+    features = self.q.eval({self.s_t:[s_t]})[0]
     if random.random() < ep:
       action = random.randrange(self.env.action_size)
     else:
-      action = self.q_action.eval({self.s_t: [s_t]})[0]
-    #  action = self.choose_action(s_t)
+      #action = self.q_action.eval({self.s_t: [s_t]})[0]
+      #features = self.sess.run(self.q, {self.s_t:[s_t]})
+      action = self.choose_action(features)
 
-    return action
+    return features,action
 
   # train q-eval and update q-target
-  def observe(self, screen, reward, action, terminal):
+  def observe(self, screen, reward, features, terminal):
     reward = max(self.min_reward, min(self.max_reward, reward))
 
     self.history.add(screen)
-    self.memory.add(screen, reward, action, terminal)
+    self.memory.add(screen, reward, features, terminal)
 
     if self.step > self.learn_start:
 	  # update q-eval network every self.train_frequency step
@@ -187,11 +193,12 @@ class Agent(BaseModel):
         self.update_target_q_network()
 
   # sample experience for training, as well as double Q-learning for alleviate over estimate
+  # run the computation
   def q_learning_mini_batch(self):
     if self.memory.count < self.history_length:
       return
     else:
-      s_t, action, reward, s_t_plus_1, terminal = self.memory.sample()
+      s_t, features, reward, s_t_plus_1, terminal = self.memory.sample()
 
     t = time.time()
     if self.double_q:
@@ -204,11 +211,12 @@ class Agent(BaseModel):
       })
       target_q_t = (1. - terminal) * self.discount * q_t_plus_1_with_pred_action + reward
     else:
-      q_t_plus_1 = self.target_q.eval({self.target_s_t: s_t_plus_1})
-
-      terminal = np.array(terminal) + 0.
-      max_q_t_plus_1 = np.max(q_t_plus_1, axis=1)
-      target_q_t = (1. - terminal) * self.discount * max_q_t_plus_1 + reward
+      #q_t_plus_1 = self.target_q.eval({self.target_s_t: s_t_plus_1})
+      #terminal = np.array(terminal) + 0.
+      #max_q_t_plus_1 = np.max(q_t_plus_1, axis=1)
+      features_t_plus_1,action = self.choose_action(s_t_plus_1)
+      chosen_q_t_plus_1 = np.mean(features_t_plus_1)
+      target_q_t = (1. - terminal) * self.discount * chosen_q_t_plus_1 + reward
 
     _, q_t, loss, summary_str = self.sess.run([self.optim, self.q, self.loss, self.q_summary], {
       self.target_q_t: target_q_t,
@@ -267,15 +275,15 @@ class Agent(BaseModel):
           tf.reduce_mean(self.advantage, reduction_indices=1, keep_dims=True))
       else:
         self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.l3_flat, 512, activation_fn=activation_fn, name='l4')
-        self.q, self.w['q_w'], self.w['q_b'] = linear(self.l4, self.env.action_size, name='q')
-        #self.q, self.w['q_w'], self.w['q_b'] = linear(self.l4, self.feature_size, name='q')
+        #self.q, self.w['q_w'], self.w['q_b'] = linear(self.l4, self.env.action_size, name='q')
+        self.q, self.w['q_w'], self.w['q_b'] = linear(self.l4, self.feature_size, name='q')
 
-      self.q_action = tf.argmax(self.q, axis=1)
+      #self.q_action = tf.argmax(self.q, axis=1)
 
 	  # For tensorboard representation
       q_summary = []
       avg_q = tf.reduce_mean(self.q, 0)
-      for idx in xrange(self.env.action_size):
+      for idx in xrange(self.feature_size):
         q_summary.append(tf.summary.histogram('q/%s' % idx, avg_q[idx]))
       self.q_summary = tf.summary.merge(q_summary, 'q_summary')
 
@@ -317,10 +325,10 @@ class Agent(BaseModel):
       else:
         self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
             linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_l4')
-        self.target_q, self.t_w['q_w'], self.t_w['q_b'] = \
-            linear(self.target_l4, self.env.action_size, name='target_q')
         #self.target_q, self.t_w['q_w'], self.t_w['q_b'] = \
-        #    linear(self.target_l4, self.feature_size, name='target_q')
+        #    linear(self.target_l4, self.env.action_size, name='target_q')
+        self.target_q, self.t_w['q_w'], self.t_w['q_b'] = \
+            linear(self.target_l4, self.feature_size, name='target_q')
 
       self.target_q_idx = tf.placeholder('int32', [None, None], 'outputs_idx')
       self.target_q_with_idx = tf.gather_nd(self.target_q, self.target_q_idx)
@@ -333,13 +341,13 @@ class Agent(BaseModel):
         self.t_w_input[name] = tf.placeholder('float32', self.t_w[name].get_shape().as_list(), name=name)
         self.t_w_assign_op[name] = self.t_w[name].assign(self.t_w_input[name])
 
-    # optimizer
     with tf.variable_scope('optimizer'):
       self.target_q_t = tf.placeholder('float32', [None], name='target_q_t')
       self.action = tf.placeholder('int64', [None], name='action')
 
-      action_one_hot = tf.one_hot(self.action, self.env.action_size, 1.0, 0.0, name='action_one_hot')
-      q_acted = tf.reduce_sum(self.q * action_one_hot, reduction_indices=1, name='q_acted')
+      #action_one_hot = tf.one_hot(self.action, self.env.action_size, 1.0, 0.0, name='action_one_hot')
+      #q_acted = tf.reduce_sum(self.q * action_one_hot, reduction_indices=1, name='q_acted')
+      q_acted = tf.reduce_sum(self.q)
 
       self.delta = self.target_q_t - q_acted
 
@@ -419,6 +427,7 @@ class Agent(BaseModel):
     for summary_str in summary_str_lists:
       self.writer.add_summary(summary_str, self.step)
 
+  # no weight-updating process
   def play(self, n_step=10000, n_episode=100, test_ep=None, render=False):
     if test_ep == None:
       test_ep = self.ep_end
@@ -438,7 +447,7 @@ class Agent(BaseModel):
 
       for t in tqdm(range(n_step), ncols=70):
         # 1. predict
-        action = self.predict(test_history.get(), test_ep)
+        _,action = self.predict(test_history.get(), test_ep)
         print(action)
         # 2. act
         screen, reward, terminal = self.env.act(action, is_training=False)

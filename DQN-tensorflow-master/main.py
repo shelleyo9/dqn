@@ -1,6 +1,8 @@
 from __future__ import print_function
 import random
 import tensorflow as tf
+import os  
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"  
 
 from dqn.agent import Agent
 from dqn.environment import GymEnvironment, SimpleGymEnvironment
