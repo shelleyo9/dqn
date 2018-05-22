@@ -124,7 +124,7 @@ class Agent(BaseModel):
 
   # dimension of s_t: 84*84*4, scaled screenshots with 4 most recent ones
   # return: features, selected_action
-  def choose_action(self, q):
+  def choose_action(self, s_t):
     # q_val = self.sess.run(self.q, {self.s_t: [s_t]}) 
 	# dimension of q: 1*6, Q value for each item in action.space
 	# Assumed each one represents Q(s,f), so now the dimension of q should be 1*5
@@ -135,6 +135,11 @@ class Agent(BaseModel):
 	# feature 5: position of the paddle
     #q = self.sess.run(self.q,{self.s_t:[s_t]})
     #q = self.q.eval({self.s_t: [s_t]})
+    #print(s_t.shape)
+    if len(s_t.shape) == 4:
+	  q = self.q.eval({self.s_t: s_t})[0]
+    else:
+      q = self.q.eval({self.s_t:[s_t]})[0]
 
     # by default the paddle stay hold
     # action: 2--right, 3--left
@@ -156,7 +161,7 @@ class Agent(BaseModel):
 	  else:
 	    action = 3
     
-    return action
+    return q,action
 	
   # choose action by epsilon greedy policy
   # choose action based on rule
@@ -166,13 +171,13 @@ class Agent(BaseModel):
         max(0., (self.ep_start - self.ep_end)
           * (self.ep_end_t - max(0., self.step - self.learn_start)) / self.ep_end_t))
 
-    features = self.q.eval({self.s_t:[s_t]})[0]
     if random.random() < ep:
+      features = self.q.eval({self.s_t:[s_t]})[0]
       action = random.randrange(self.env.action_size)
     else:
       #action = self.q_action.eval({self.s_t: [s_t]})[0]
       #features = self.sess.run(self.q, {self.s_t:[s_t]})
-      action = self.choose_action(features)
+      features,action = self.choose_action(s_t)
 
     return features,action
 
@@ -190,6 +195,7 @@ class Agent(BaseModel):
 
 	  # update q-target network every C(self.target_q_update_step) step in DQN algorithm
       if self.step % self.target_q_update_step == self.target_q_update_step - 1:
+        print('Executing update_target_q_network()')
         self.update_target_q_network()
 
   # sample experience for training, as well as double Q-learning for alleviate over estimate
@@ -220,7 +226,7 @@ class Agent(BaseModel):
 
     _, q_t, loss, summary_str = self.sess.run([self.optim, self.q, self.loss, self.q_summary], {
       self.target_q_t: target_q_t,
-      self.action: action,
+      #self.action: action,
       self.s_t: s_t,
       self.learning_rate_step: self.step,
     })
@@ -343,7 +349,7 @@ class Agent(BaseModel):
 
     with tf.variable_scope('optimizer'):
       self.target_q_t = tf.placeholder('float32', [None], name='target_q_t')
-      self.action = tf.placeholder('int64', [None], name='action')
+      #self.action = tf.placeholder('int64', [None], name='action')
 
       #action_one_hot = tf.one_hot(self.action, self.env.action_size, 1.0, 0.0, name='action_one_hot')
       #q_acted = tf.reduce_sum(self.q * action_one_hot, reduction_indices=1, name='q_acted')

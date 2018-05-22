@@ -14,7 +14,6 @@ class ReplayMemory:
 
     self.cnn_format = config.cnn_format
     self.memory_size = config.memory_size
-    #self.actions = np.empty(self.memory_size, dtype = np.uint8)
     self.features = np.empty([self.memory_size, self.feature_size], dtype = np.float32)
     self.rewards = np.empty(self.memory_size, dtype = np.integer)
     self.screens = np.empty((self.memory_size, config.screen_height, config.screen_width), dtype = np.float16)
@@ -32,7 +31,6 @@ class ReplayMemory:
   def add(self, screen, reward, features, terminal):
     assert screen.shape == self.dims
     # NB! screen is post-state, after action and reward
-    #self.actions[self.current] = action
     self.features[self.current] = features
     self.rewards[self.current] = reward
     self.screens[self.current, ...] = screen
@@ -78,7 +76,7 @@ class ReplayMemory:
       self.poststates[len(indexes), ...] = self.getState(index)
       indexes.append(index)
 
-      features = self.features[indexes]
+    features = self.features[indexes]
     rewards = self.rewards[indexes]
     terminals = self.terminals[indexes]
 
