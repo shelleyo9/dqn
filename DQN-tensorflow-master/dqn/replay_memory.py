@@ -9,7 +9,7 @@ from .utils import save_npy, load_npy
 
 class ReplayMemory:
   def __init__(self, config, model_dir):
-    self.feature_size = 5
+    self.feature_size = 4 
     self.model_dir = model_dir
 
     self.cnn_format = config.cnn_format

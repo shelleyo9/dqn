@@ -24,12 +24,14 @@ class Agent(BaseModel):
     self.memory = ReplayMemory(self.config, self.model_dir)
 
     # four features, output unit number is 4, each output means the Q value of each feature
-	# feature 1: space width 
-	# feature 2: angle of the ball
-	# feature 3: height(y) of the ball
-	# feature 4: x-axis distance(x) of the ball
-	# feature 5: position of the paddle
-    self.feature_size = 5 
+	# feature 1: angle of the ball
+	# feature 2: height(y) of the ball
+	# feature 3: x-axis distance(x) of the ball
+	# feature 4: position of the paddle
+
+	# wall width is 5 separately
+    self.space_width = self.screen_width - 10
+    self.feature_size = 4 
 
     with tf.variable_scope('step'):
       self.step_op = tf.Variable(0, trainable=False, name='step')
@@ -124,39 +126,44 @@ class Agent(BaseModel):
 
   # dimension of s_t: 84*84*4, scaled screenshots with 4 most recent ones
   # return: features, selected_action
-  def choose_action(self, s_t):
+  def choose_action(self, s_t, target_network=0):
     # q_val = self.sess.run(self.q, {self.s_t: [s_t]}) 
 	# dimension of q: 1*6, Q value for each item in action.space
 	# Assumed each one represents Q(s,f), so now the dimension of q should be 1*5
-	# feature 1: space width
-	# feature 2: angle of the ball
-	# feature 3: height(y) of the ball
-	# feature 4: x-axis distance(x) of the ball
-	# feature 5: position of the paddle
+	# feature 1: angle of the ball
+	# feature 2: height(y) of the ball
+	# feature 3: x-axis distance(x) of the ball
+	# feature 4: position of the paddle
     #q = self.sess.run(self.q,{self.s_t:[s_t]})
     #q = self.q.eval({self.s_t: [s_t]})
     #print(s_t.shape)
     if len(s_t.shape) == 4:
-	  q = self.q.eval({self.s_t: s_t})[0]
+      if target_network == 1:
+        q = self.target_q.eval({self.target_s_t: s_t})[0]
+      else:
+        q = self.q.eval({self.s_t: s_t})[0]
     else:
-      q = self.q.eval({self.s_t:[s_t]})[0]
+      if target_network == 1:
+        q = self.target_q.eval({self.target_s_t: s_t})
+      else: 
+        q = self.q.eval({self.s_t:[s_t]})[0]
 
     # by default the paddle stay hold
     # action: 2--right, 3--left
     action = 1
     # only when the ball is going down, i.e., the angle of velocity is over 180, then predict the potential landing spot
-    if q[1] > 180:
-	  theta = q[1] - 180
-	  moving_horizen_dist = q[2]*cos(theta)/sin(theta)
-	  if moving_horizen_dist > q[0] - q[3]:
-	    if (moving_horizen_dist-q[0]+q[3]/q[0]) % 2 != 0:
-		  final_landing_spot = ((moving_horizen_dist + q[3])/q[0] - 1)%q[0]
+    if q[0] > 180:
+	  theta = q[0] - 180
+	  moving_horizen_dist = q[1]*cos(theta)/sin(theta)
+	  if moving_horizen_dist > self.space_width - q[2]:
+	    if (moving_horizen_dist-self.space_width+q[2]/self.space_width) % 2 != 0:
+		  final_landing_spot = ((moving_horizen_dist + q[2])/self.space_width - 1)%self.space_width
 	    else:
-		  final_landing_spot = q[0] - ((moving_horizen_dist + q[3])/q[0] - 1)%q[0] 
+		  final_landing_spot = self.space_width - ((moving_horizen_dist + q[2])/self.space_width - 1)%self.space_width
 	  else:
-	    final_landing_spot = moving_horizen_dist + q[3]
+	    final_landing_spot = moving_horizen_dist + q[2]
 
-	  if final_landing_spot > q[4]:
+	  if final_landing_spot > q[3]:
 		action = 2
 	  else:
 	    action = 3
@@ -218,29 +225,27 @@ class Agent(BaseModel):
       target_q_t = (1. - terminal) * self.discount * q_t_plus_1_with_pred_action + reward
     else:
       #q_t_plus_1 = self.target_q.eval({self.target_s_t: s_t_plus_1})
+      features_t_plus_1,action = self.choose_action(s_t_plus_1, 1)
       #terminal = np.array(terminal) + 0.
       #max_q_t_plus_1 = np.max(q_t_plus_1, axis=1)
-      features_t_plus_1,action = self.choose_action(s_t_plus_1)
-      chosen_q_t_plus_1 = np.mean(features_t_plus_1)
+      chosen_q_t_plus_1 = np.sum(features_t_plus_1)
       target_q_t = (1. - terminal) * self.discount * chosen_q_t_plus_1 + reward
 
-    _, q_t, loss, summary_str = self.sess.run([self.optim, self.q, self.loss, self.q_summary], {
+    _, loss, summary_str = self.sess.run([self.optim, self.loss, self.q_summary], {
       self.target_q_t: target_q_t,
-      #self.action: action,
       self.s_t: s_t,
       self.learning_rate_step: self.step,
     })
 
     self.writer.add_summary(summary_str, self.step)
     self.total_loss += loss
-    self.total_q += q_t.mean()
+    self.total_q += features.mean()
     self.update_count += 1
 
   def build_dqn(self):
     self.w = {}
     self.t_w = {}
 
-    #initializer = tf.contrib.layers.xavier_initializer()
     initializer = tf.truncated_normal_initializer(0, 0.02)
     activation_fn = tf.nn.relu
 
@@ -274,7 +279,7 @@ class Agent(BaseModel):
           linear(self.value_hid, 1, name='value_out')
 
         self.advantage, self.w['adv_w_out'], self.w['adv_w_b'] = \
-          linear(self.adv_hid, self.env.action_size, name='adv_out')
+          linear(self.adv_hid, self.env.feature_size, name='adv_out')
 
         # Average Dueling
         self.q = self.value + (self.advantage - 
@@ -323,7 +328,7 @@ class Agent(BaseModel):
           linear(self.t_value_hid, 1, name='target_value_out')
 
         self.t_advantage, self.t_w['adv_w_out'], self.t_w['adv_w_b'] = \
-          linear(self.t_adv_hid, self.env.action_size, name='target_adv_out')
+          linear(self.t_adv_hid, self.env.feature_size, name='target_adv_out')
 
         # Average Dueling
         self.target_q = self.t_value + (self.t_advantage - 
@@ -454,9 +459,9 @@ class Agent(BaseModel):
       for t in tqdm(range(n_step), ncols=70):
         # 1. predict
         _,action = self.predict(test_history.get(), test_ep)
-        print(action)
         # 2. act
         screen, reward, terminal = self.env.act(action, is_training=False)
+        print(screen)
         # 3. observe
 		# NB! screen is the posterior state
         test_history.add(screen)

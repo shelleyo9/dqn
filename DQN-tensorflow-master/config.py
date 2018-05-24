@@ -9,7 +9,7 @@ class AgentConfig(object):
   random_start = 30
   cnn_format = 'NCHW'
   discount = 0.99
-  target_q_update_step = 0.2 * scale
+  target_q_update_step = 0.4 * scale
   learning_rate = 0.00025
   learning_rate_minimum = 0.00025
   learning_rate_decay = 0.96
@@ -22,7 +22,7 @@ class AgentConfig(object):
   history_length = 4
   train_frequency = 4
   # after such number round of games, start to train the network
-  learn_start = 1 * scale
+  learn_start = 2 * scale
 
   min_delta = -1
   max_delta = 1
